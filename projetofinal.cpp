@@ -15,8 +15,36 @@
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
+#include "BlackGPIO/BlackGPIO.h"
+#include "ADC/Adc.h"
 
 #define MULTICAST_ADDR "225.0.0.37"
+
+using namespace Blacklib;
+
+// BlackGPIO chave1(GPIO_,output);
+// BlackGPIO chave2(GPIO_,output);
+// BlackGPIO chave3(GPIO_,output);
+// BlackGPIO chave4(GPIO_,output);
+BlackGPIO pin1(GPIO_5,output);
+BlackGPIO pin2(GPIO_48,output);
+BlackGPIO pin3(GPIO_31,output);
+BlackGPIO pin4(GPIO_60,output);
+BlackGPIO pin5(GPIO_30,output);
+BlackGPIO pin6(GPIO_4,output);
+BlackGPIO pin7(GPIO_15,output);
+// BlackGPIO pin8(GPIO_,output);
+ADC adc_t1(AIN0);
+ADC adc_t2(AIN1);
+
+
+digitalValue getDigitalValue(int valor){
+	if(valor == 0)
+		return low;
+	else
+		return high;
+}
+
 
 void *thread_sendSensorFunction(void* idThread) {
     printf("sensor_thread--> Teste\n");
@@ -27,7 +55,7 @@ void *thread_sendSensorFunction(void* idThread) {
     struct sockaddr_in address;
     int result;
 
-    unsigned short porta = 9734;
+    unsigned short porta = 9711;
     sockfd  = socket(AF_INET, SOCK_DGRAM,0);  // criacao do socket
 
     address.sin_family = AF_INET;
@@ -39,8 +67,8 @@ void *thread_sendSensorFunction(void* idThread) {
 
     while(1){
     	printf("Teste envio adc\n");
-    	adcRead[0] = 255; // ler adc 1
-    	adcRead[1] = 245; // ler adc 2
+    	adcRead[0] = adc_t1.getPercentValue()/100.0; // ler adc 1
+    	adcRead[1] = adc_t2.getPercentValue()/100.0; // ler adc 2
     	sendto(sockfd, &adcRead,sizeof(adcRead),0,(struct sockaddr *) &address, len);
         sleep(1);
     }
@@ -59,7 +87,8 @@ void *thread_rcvValueFunction(void* selectedPort) {
     
     struct ip_mreq mreq;  // para endere�o multicast
     
-    int porta = 9734;
+    int porta = 9711;
+    int porta_atual = 11; 
     
     unlink("server_socket");  // remocao de socket antigo
     if ( (server_sockfd = socket(AF_INET, SOCK_DGRAM, 0) )  < 0  )  // cria um novo socket
@@ -109,23 +138,24 @@ void *thread_rcvValueFunction(void* selectedPort) {
         printf(" Valor 5 recebido foi = %f\n", valor[4]);
         printf(" Valor 6 recebido foi = %f\n", valor[5]);
         printf(" Valor 7 recebido foi = %f\n", valor[6]);
-
-        int btnPressed = 1; // leitura do botao
-
-        if(btnPressed){
-        	// pega leitura da porta
-        	
-        	// atualiza valor da porta
-        	if(porta == 9733){
-        		printf("\tvolta valor original\n");
-        		porta = 9734;
-        	}
-        	else{
-        		printf("\tseta outro valor\n");
-        		porta = 9733;
-        	}
+	
+	pin1.setValue(getDigitalValue(valor[0]));
+	pin2.setValue(getDigitalValue(valor[1]));
+	pin3.setValue(getDigitalValue(valor[2]));
+	pin4.setValue(getDigitalValue(valor[3]));
+	pin5.setValue(getDigitalValue(valor[4]));
+	pin6.setValue(getDigitalValue(valor[5]));
+        pin7.setValue(getDigitalValue(valor[6]));
+	pin8.setValue(getDigitalValue(valor[7]));
+	
+//         int chave = chave1.getValue() * 8 + chave2.getValue() * 4 + chave3.getValue() * 2 + chave4.getValue();	    
+	int chave = porta_atual;
+	    
+        if(chave !== porta_atual){
 
         	// refaz conexao 
+		    string porta_str = '98' + chave; 
+		    porta = strtol(porta_str,NULL,10);
 		    unlink("server_socket");  // remocao de socket antigo
 		    server_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 		    server_address.sin_family = AF_INET;
@@ -137,8 +167,9 @@ void *thread_rcvValueFunction(void* selectedPort) {
 		    mreq.imr_multiaddr.s_addr=inet_addr(MULTICAST_ADDR);
 		    mreq.imr_interface.s_addr=htonl(INADDR_ANY);
 		    setsockopt(server_sockfd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mreq,sizeof(mreq));
+		    porta_atual = chave;
         }
-        
+        sleep(1);
     }
     pthread_exit((void *) "Obrigado pelo seu tempo de CPU");
 }
