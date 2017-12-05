@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define MULTICAST_ADDR "255.0.0.37"
+#define MULTICAST_ADDR "225.0.0.37"
 
 void *thread_function_1(void *arg);
 void *thread_function_2(void *arg);
@@ -69,7 +69,7 @@ int main(){
     mreq.imr_multiaddr.s_addr=inet_addr(MULTICAST_ADDR);
     mreq.imr_interface.s_addr=htonl(INADDR_ANY);
     if (setsockopt(server_sockfd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mreq,sizeof(mreq)) < 0) {
-        perror("setsockopt");
+        perror("setsockopt main");
         exit(1);
     }
 
@@ -88,7 +88,11 @@ int main(){
     
     while(1){
 
+    	printf("vai receber\n");
+
         recvfrom(server_sockfd, &tempo, sizeof(tempo),0,(struct sockaddr *) &client_address, &client_len);
+        printf("tempo[0]: %f\n", tempo[0]);
+        printf("tempo[1]: %f\n", tempo[1]);
 			        
 		sleep(1);
 		                
@@ -96,6 +100,12 @@ int main(){
     printf("\nMAIN() --> Esperando as threads terminar...\n");
     
     res = pthread_join(a_thread, &thread_result);
+    if (res != 0) {
+        perror("Juncao da Thread falhou");
+        exit(EXIT_FAILURE);
+    }
+
+    res = pthread_join(b_thread, &thread_result);
     if (res != 0) {
         perror("Juncao da Thread falhou");
         exit(EXIT_FAILURE);
@@ -108,8 +118,8 @@ int main(){
 
 void *thread_function_1(void *arg) {
 	
-	int *values;
-	values = malloc(8*sizeof(int));
+	int* values;
+	values = (int*) malloc(8*sizeof(int));
 
 	int sockfd;
     int len;
@@ -156,7 +166,7 @@ void *thread_function_1(void *arg) {
 
 void *thread_function_2(void *arg) {	
 	int *values;
-	values = malloc(8*sizeof(int));
+	values = (int*) malloc(8*sizeof(int));
 
 	int sockfd;
     int len;
@@ -206,7 +216,7 @@ void *thread_function_2(void *arg) {
 int* led_number(int k) {
 
 	int *values;
-	values = malloc(8*sizeof(int));
+	values = (int*) malloc(8*sizeof(int));
 
 	if (k == 7)
 	{
