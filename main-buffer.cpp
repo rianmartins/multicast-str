@@ -14,14 +14,14 @@
 
 void *thread_function_1(void *arg);
 void *thread_function_2(void *arg);
-int* led_number(int k);
+bool* led_number(int k);
 pthread_mutex_t t_mutex; 
 
 #define WORK_SIZE 1024
 char work_area[WORK_SIZE];
 
 int buffer = 0;
-double tempo[2]= {1,1};
+float tempo[2]= {1,1};
 
 int main(){
     int res;
@@ -89,7 +89,6 @@ int main(){
     while(1){
 
     	printf("vai receber\n");
-
         recvfrom(server_sockfd, &tempo, sizeof(tempo),0,(struct sockaddr *) &client_address, &client_len);
         printf("tempo[0]: %f\n", tempo[0]);
         printf("tempo[1]: %f\n", tempo[1]);
@@ -118,8 +117,8 @@ int main(){
 
 void *thread_function_1(void *arg) {
 	
-	int* values;
-	values = (int*) malloc(8*sizeof(int));
+	bool* values;
+	values = (bool*) malloc(8*sizeof(bool));
 
 	int sockfd;
     int len;
@@ -155,8 +154,8 @@ void *thread_function_1(void *arg) {
 		else if (buffer == 1)
 			values = led_number(1);
 	
-		sendto(sockfd, &values,sizeof(values),0,(struct sockaddr *) &address, len);
-		pthread_mutex_unlock(&t_mutex);		
+		sendto(sockfd, values,sizeof(values),0,(struct sockaddr *) &address, len);
+		pthread_mutex_unlock(&t_mutex);
 		sleep(tempo[0]*5);		
 	}
 
@@ -165,8 +164,8 @@ void *thread_function_1(void *arg) {
 }
 
 void *thread_function_2(void *arg) {	
-	int *values;
-	values = (int*) malloc(8*sizeof(int));
+	bool *values;
+	values = (bool*) malloc(8*sizeof(bool));
 
 	int sockfd;
     int len;
@@ -203,7 +202,7 @@ void *thread_function_2(void *arg) {
 		else if (buffer == 0)
 			values = led_number(0);
 
-		sendto(sockfd, &values,sizeof(values),0,(struct sockaddr *) &address, len);
+		sendto(sockfd, values,sizeof(values),0,(struct sockaddr *) &address, len);
 		pthread_mutex_unlock(&t_mutex);
 		sleep(tempo[1]*5);		
 	}
@@ -213,16 +212,16 @@ void *thread_function_2(void *arg) {
 	close(sockfd);
 }
 
-int* led_number(int k) {
+bool* led_number(int k) {
 
-	int *values;
-	values = (int*) malloc(8*sizeof(int));
+	bool *values;
+	values = (bool*) malloc(8*sizeof(bool));
 
 	if (k == 7)
 	{
-		values[0] = 0;
-		values[1] = 0;
-		values[2] = 0;
+		values[0] = 1;
+		values[1] = 1;
+		values[2] = 1;
 		values[3] = 0;
 		values[4] = 0;
 		values[5] = 0;
@@ -231,64 +230,64 @@ int* led_number(int k) {
 	}
 	else if (k == 6)
 	{
-		values[0] = 0;
+		values[0] = 1;
 		values[1] = 0;
-		values[2] = 0;
-		values[3] = 0;
-		values[4] = 0;
-		values[5] = 0;
-		values[6] = 0;
+		values[2] = 1;
+		values[3] = 1;
+		values[4] = 1;
+		values[5] = 1;
+		values[6] = 1;
 		values[7] = 1;
 	}
 	else if (k == 5)
 	{
-		values[0] = 0;
+		values[0] = 1;
 		values[1] = 0;
-		values[2] = 0;
-		values[3] = 0;
+		values[2] = 1;
+		values[3] = 1;
 		values[4] = 0;
-		values[5] = 0;
-		values[6] = 0;
+		values[5] = 1;
+		values[6] = 1;
 		values[7] = 1;
 	}
 	else if (k == 4)
 	{
 		values[0] = 0;
-		values[1] = 0;
-		values[2] = 0;
+		values[1] = 1;
+		values[2] = 1;
 		values[3] = 0;
 		values[4] = 0;
-		values[5] = 0;
-		values[6] = 0;
+		values[5] = 1;
+		values[6] = 1;
 		values[7] = 1;
 	}
 	else if (k == 3)
 	{
-		values[0] = 0;
-		values[1] = 0;
-		values[2] = 0;
-		values[3] = 0;
+		values[0] = 1;
+		values[1] = 1;
+		values[2] = 1;
+		values[3] = 1;
 		values[4] = 0;
 		values[5] = 0;
-		values[6] = 0;
+		values[6] = 1;
 		values[7] = 1;
 	}
 	else if (k == 2)
 	{
-		values[0] = 0;
-		values[1] = 0;
+		values[0] = 1;
+		values[1] = 1;
 		values[2] = 0;
-		values[3] = 0;
-		values[4] = 0;
+		values[3] = 1;
+		values[4] = 1;
 		values[5] = 0;
-		values[6] = 0;
+		values[6] = 1;
 		values[7] = 1;
 	}
 	else if (k == 1)
 	{
 		values[0] = 0;
-		values[1] = 0;
-		values[2] = 0;
+		values[1] = 1;
+		values[2] = 1;
 		values[3] = 0;
 		values[4] = 0;
 		values[5] = 0;
@@ -297,12 +296,12 @@ int* led_number(int k) {
 	}
 	else if (k == 0)
 	{
-		values[0] = 0;
-		values[1] = 0;
-		values[2] = 0;
-		values[3] = 0;
-		values[4] = 0;
-		values[5] = 0;
+		values[0] = 1;
+		values[1] = 1;
+		values[2] = 1;
+		values[3] = 1;
+		values[4] = 1;
+		values[5] = 1;
 		values[6] = 0;
 		values[7] = 1;
 	}
